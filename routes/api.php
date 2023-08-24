@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PlaceController;
+use App\Http\Controllers\ReviewController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -24,11 +26,11 @@ Route::get('/hello', function(){
 });
 
 Route::get('/goodbye/{name}', function($name){
-    return "Goodbye Selamat Tinggal Sayonara ".$name;
+    return "Goodbye ".$name;
 });
 
 Route::post('/info', function(Request $request){
-    return "Woi ".$request["name"]."you are  ".$request["age"]. "years old";
+    return "Hello ".$request["name"]."you are  ".$request["age"]. "years old";
 });
 
 Route::post("/places",[PlaceController::class,'store']);
@@ -42,15 +44,15 @@ Route::put('/places/{id}',[PlaceController::class, 'update']);
 Route::delete('/places/{id}',[PlaceController::class, 'delete']);
 
 
-Route::post("/reviews",[PlaceController::class,'store']);
+Route::post("/reviews",[ReviewController::class,'store']);
 
-Route::get("/reviews",[PlaceController::class,'index']);
+Route::get("/reviews",[ReviewController::class,'index']);
  
-Route::get("/reviews/{id}",[PlaceController::class,'show']);
+Route::get("/reviews/{id}",[ReviewController::class,'show']);
 
-Route::put('/reviews/{id}',[PlaceController::class, 'update']);
+Route::put('/reviews/{id}',[ReviewController::class, 'update']);
 
-Route::delete('/reviews/{id}',[PlaceController::class, 'delete']);
+Route::delete('/reviews/{id}',[ReviewController::class, 'delete']);
 
 
 
