@@ -1,4 +1,4 @@
-FROM php:8.1-fpm
+FROM php:8.2.1-fpm
 
 USER root
 
@@ -37,4 +37,6 @@ RUN composer install
 RUN php artisan migrate --force
 
 CMD ["php","artisan","serve","--host=0.0.0.0"]
+
+
 
