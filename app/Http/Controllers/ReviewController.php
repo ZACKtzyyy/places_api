@@ -2,111 +2,124 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Place;
 use App\Models\Review;
 use Illuminate\Http\Request;
+use Tymon\JWTAuth\Facades\JWTAuth;
+
 
 class ReviewController extends Controller
 {
-    public function store(Request $request){
-        $review = new Review();
-        
-        $review->rating = $request->rating;
-        $review->comments = $request->comments;
-        $review->place_id = $request->place_id;
-        $review->user_id = $request->user_id;
+    public function store(Request $request, $placeId)
+    {
+        try {
+            $place = Place::find($placeId);
+            $place->avg_rating = ($place->avg_rating * 
+            count($place['reviews']) + $request->rating) / 
+            (count($place['reviews']) + 1);
+            $user = JWTAuth::parseToken()->authenticate();
+            $userId = $user->id;
 
-        if ($review->save()){
-            return response()->json([
-                "success"=>true,
-                "message"=>"Review succesfully added"
-                
+            Review::create([
+                "rating" => $request->rating,
+                "user_id" => $userId,
+                "place_id" => $placeId,
+                "comments" => $request->comments
             ]);
-        }
-        else{
-            return response()->json([
-                "success"=>false,
-                "message"=>"wrong"
-            ]);
+
+            $place->save();
+
+            return response()->json(["success" => true, "message" => "Review successfully added"]);
+        } catch (\Exception $err) {
+            return response()->json(["success" => false, "message" => $err->getMessage()]);
         }
     }
-    //Read All
-    public function index(){
+
+    public function index()
+    {
         $reviews = Review::all();
-            if ($reviews){
-                return response()->json([
-                    "success"=>true,
-                    "data"=>$reviews
-                ]);
-            }
-            else {
-                return response()->json([
-                    "success" => false,
-                    "data" => "Something is wrong"
-                ]);
-            }
-        
-    }
-    //Read by ID
-    public function show($id){
-        $review = Review::find($id);
-        if ($review){
-            return response() -> json([
-                "success"=>true,
-                "data" =>$review
-            ]);
-        }
-        else{
+
+        if ($reviews) {
             return response()->json([
-                "success" =>false,
+                "success" => true,
+                "data" => $reviews
+            ]);
+        } else {
+            return response()->json([
+                "success" => false,
                 "data" => "Something is wrong"
             ]);
         }
-
     }
-    //Update
-    public function update(Request $request, $id){
+
+    public function show($id)
+    {
         $review = Review::find($id);
-        if ($review){
-        $review->rating = $request->rating;
-        $review->comments = $request->comments;
-        $review->place_id = $request->place_id;
-        $review->user_id = $request->user_id; 
-        if ($review->save()){
+
+        if ($review) {
             return response()->json([
-                "success"=>true,
-                "message"=>"Review successfull updated",
-                "data"=>$review
+                "success" => true,
+                "data" => $review
             ]);
-        } 
-        else{
+        } else {
             return response()->json([
-                "success"=>false,
-                "data" => "Something is wrong",
+                "success" => false,
+                "data" => "Review not found"
             ]);
         }
-        }
-        
-
-
-    //Delete
     }
-    public function delete($id){
+
+    public function update(Request $request, $id)
+    {
         $review = Review::find($id);
-        if ($review){
-            if($review->delete()){
-                return response()->json([
-                    "success"=>true,
-                    "message"=>"Successfully delete"
-                ]);
-            }
-            else{
-                return response()->json([
-                    "success"=>false,
-                    "message"=>"Something is wrong"
-                ]);
-            }
-        }
 
+        if ($review) {
+            $review->rating = $request->rating;
+            $review->comments = $request->comments;
+            $review->place_id = $request->place_id;
+            $review->user_id = $request->user_id;
+
+            if ($review->save()) {
+                return response()->json([
+                    "success" => true,
+                    "message" => "Review successfully updated",
+                    "data" => $review
+                ]);
+            } else {
+                return response()->json([
+                    "success" => false,
+                    "message" => "Failed to update review"
+                ]);
+            }
+        } else {
+            return response()->json([
+                "success" => false,
+                "message" => "Review not found"
+            ]);
+        }
     }
-    
+
+    public function delete($id)
+    {
+        $review = Review::find($id);
+
+        if ($review) {
+            if ($review->delete()) {
+                return response()->json([
+                    "success" => true,
+                    "message" => "Review successfully deleted"
+                ]);
+            } else {
+                return response()->json([
+                    "success" => false,
+                    "message" => "Failed to delete review"
+                ]);
+            }
+        } else {
+            return response()->json([
+                "success" => false,
+                "message" => "Review not found"
+            ]);
+        }
+    }
 }

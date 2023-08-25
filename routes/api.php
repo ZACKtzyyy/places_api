@@ -28,12 +28,16 @@ Route::middleware('jwt.auth')->group(function () {
 
     // Create
     Route::post("/places",[PlaceController::class,'store']);
+    Route::post("places/{placeId}/reviews",[ReviewController::class,'store']);
     // Read
     Route::get("/places",[PlaceController::class,'index']);
+    Route::get("/reviews",[ReviewController::class,'index']);
     // Update
-    Route::put('/places/{id}',[PlaceController::class,'updatePlace']);
+    Route::put('/places/{placeid}',[PlaceController::class,'update']);
+    Route::put('/reviews/{id}',[ReviewController::class, 'update']);
     // Delete
-    Route::delete('/places/{id}',[PlaceController::class, 'delete']);
+    Route::delete('/places/{placeid}',[PlaceController::class, 'delete']);
+    Route::delete('/reviews/{id}',[ReviewController::class, 'delete']);
     });
     
 
@@ -53,18 +57,9 @@ Route::post('/info', function(Request $request){
 Route::get("/places",[PlaceController::class,'index']);
 
 Route::get("/places/{id}",[PlaceController::class,'show']);
-
-
-
-Route::post("/reviews",[ReviewController::class,'store']);
-
-Route::get("/reviews",[ReviewController::class,'index']);
  
 Route::get("/reviews/{id}",[ReviewController::class,'show']);
 
-Route::put('/reviews/{id}',[ReviewController::class, 'update']);
-
-Route::delete('/reviews/{id}',[ReviewController::class, 'delete']);
 
 Route::post('/register', [PassportAuthController::class, 'register']);
 

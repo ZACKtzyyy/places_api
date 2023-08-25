@@ -11,7 +11,6 @@ class PlaceController extends Controller
     //Create
     public function store(Request $request){
         $place = new Place();
-        
         $place->address = $request->address;
         $place->email = $request->email;
         $place->phone_number = $request->phone_number;
@@ -53,7 +52,7 @@ class PlaceController extends Controller
     }
     //Read by ID
     public function show($id){
-        $place = Place::find($id);
+        $place = Place::with('reviews.user')->find($id);
         if ($place){
             return response() -> json([
                 "success"=>true,
