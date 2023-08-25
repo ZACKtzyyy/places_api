@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Place;
@@ -7,16 +6,14 @@ use App\Models\Review;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
-
 class ReviewController extends Controller
 {
     public function store(Request $request, $placeId)
     {
         try {
             $place = Place::find($placeId);
-            $place->avg_rating = ($place->avg_rating * 
-            count($place['reviews']) + $request->rating) / 
-            (count($place['reviews']) + 1);
+            $place->avg_rating = ($place->avg_rating * count($place->reviews) + $request->rating) / (count($place->reviews) + 1);
+
             $user = JWTAuth::parseToken()->authenticate();
             $userId = $user->id;
 
@@ -35,91 +32,62 @@ class ReviewController extends Controller
         }
     }
 
-    public function index()
-    {
-        $reviews = Review::all();
+    public function update(Request $request, $placeId, $reviewId)
+{
+    try {
+        $user = JWTAuth::parseToken()->authenticate();
+        $userId = $user->id;
 
-        if ($reviews) {
-            return response()->json([
-                "success" => true,
-                "data" => $reviews
-            ]);
-        } else {
-            return response()->json([
-                "success" => false,
-                "data" => "Something is wrong"
-            ]);
+        $review = Review::where('user_id', $userId)
+            ->where('place_id', $placeId)
+            ->where('id', $reviewId)
+            ->first();
+
+        if (!$review) {
+            return response()->json(["success" => false, "message" => "Review not found or you are not authorized"]);
         }
+
+        $review->rating = $request->rating;
+        $review->comments = $request->comments;
+        $review->save();
+
+        return response()->json(["success" => true, "message" => "Review successfully updated"]);
+    } catch (\Exception $err) {
+        return response()->json(["success" => false, "message" => $err->getMessage()]);
     }
+}
 
-    public function show($id)
+
+    public function delete($placeId, $reviewId)
     {
-        $review = Review::find($id);
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
+            $userId = $user->id;
 
-        if ($review) {
-            return response()->json([
-                "success" => true,
-                "data" => $review
-            ]);
-        } else {
-            return response()->json([
-                "success" => false,
-                "data" => "Review not found"
-            ]);
-        }
-    }
+            $review = Review::where('user_id', $userId)
+                ->where('place_id', $placeId)
+                ->where('id', $reviewId)
+                ->first();
 
-    public function update(Request $request, $id)
-    {
-        $review = Review::find($id);
-
-        if ($review) {
-            $review->rating = $request->rating;
-            $review->comments = $request->comments;
-            $review->place_id = $request->place_id;
-            $review->user_id = $request->user_id;
-
-            if ($review->save()) {
-                return response()->json([
-                    "success" => true,
-                    "message" => "Review successfully updated",
-                    "data" => $review
-                ]);
-            } else {
-                return response()->json([
-                    "success" => false,
-                    "message" => "Failed to update review"
-                ]);
+            if (!$review) {
+                return response()->json(["success" => false, "message" => "Review not found or you are not authorized"]);
             }
-        } else {
-            return response()->json([
-                "success" => false,
-                "message" => "Review not found"
-            ]);
-        }
-    }
 
-    public function delete($id)
-    {
-        $review = Review::find($id);
+            $review->delete();
 
-        if ($review) {
-            if ($review->delete()) {
-                return response()->json([
-                    "success" => true,
-                    "message" => "Review successfully deleted"
-                ]);
-            } else {
-                return response()->json([
-                    "success" => false,
-                    "message" => "Failed to delete review"
-                ]);
+            // Recalculate average rating for the place
+            $place = Place::find($placeId);
+            $reviews = $place->reviews;
+            $totalRating = 0;
+            foreach ($reviews as $review) {
+                $totalRating += $review->rating;
             }
-        } else {
-            return response()->json([
-                "success" => false,
-                "message" => "Review not found"
-            ]);
+            $place->avg_rating = count($reviews) > 0 ? $totalRating / count($reviews) : 0;
+            $place->save();
+
+            return response()->json(["success" => true, "message" => "Review successfully deleted"]);
+        } catch (\Exception $err) {
+            return response()->json(["success" => false, "message" => $err->getMessage()]);
         }
     }
 }

@@ -34,11 +34,13 @@ Route::middleware('jwt.auth')->group(function () {
     Route::get("/reviews",[ReviewController::class,'index']);
     // Update
     Route::put('/places/{placeid}',[PlaceController::class,'update']);
-    Route::put('/reviews/{id}',[ReviewController::class, 'update']);
+    Route::put("places/{placeId}/reviews/{reviewId}", [ReviewController::class, 'update']);
     // Delete
     Route::delete('/places/{placeid}',[PlaceController::class, 'delete']);
-    Route::delete('/reviews/{id}',[ReviewController::class, 'delete']);
+    Route::delete("places/{placeId}/reviews/{reviewId}", [ReviewController::class, 'delete']);
     });
+
+  
     
 
 Route::get('/hello', function(){
